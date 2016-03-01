@@ -1,0 +1,16 @@
+$color: #F00;
+
+html {
+   font-family: "Verdana", sans-serif;
+  font-size:100%;
+}
+body {
+  color: rgb(0,0,0);
+  background-color: $color;margin: 0 auto 0 auto;
+}
+
+.no-svg {
+  p {
+    color: red;
+  }
+}
