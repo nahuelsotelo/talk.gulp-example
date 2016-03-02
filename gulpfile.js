@@ -5,6 +5,7 @@ var colors = require('colors');
 var plumber = require('gulp-plumber');
 var rename = require('gulp-rename');
 var sourcemaps = require('gulp-sourcemaps');
+var size = require('gulp-size');
 
 
 // DEFINE PATHS
@@ -23,7 +24,12 @@ var sourcemaps = require('gulp-sourcemaps');
     imgDist: basePath.dist + '/img',
 
     scriptsSrc: basePath.src + '/js',
-    scriptsDist: basePath.dist + '/js'
+    scriptsDist: basePath.dist + '/js',
+
+    spriteSrc: basePath.src + '/images/sprite',
+    spriteDist: basePath.dist + '/img/sprite',
+    spritePngDist: basePath.dist + '/img/sprite/pngicons',
+
   };
 
 
@@ -109,6 +115,7 @@ var sourcemaps = require('gulp-sourcemaps');
           })
         ]))
         .pipe(rename({ suffix: ".min"}))
+        .pipe(size({title: 'styles'}))
       .pipe(sourcemaps.write('./maps'))
       .pipe(gulp.dest( assetsPath.stylesDist ));
   });
@@ -152,6 +159,7 @@ var sourcemaps = require('gulp-sourcemaps');
       .pipe(rename({
         suffix: '.min'
       }))
+      .pipe(size({title: 'scripts'}))
     .pipe(sourcemaps.write('./maps'))
     .pipe(gulp.dest(assetsPath.scriptsDist));
   });
@@ -175,6 +183,65 @@ var sourcemaps = require('gulp-sourcemaps');
   });
 
 
+// IMAGES
+// ----------------------------------------------------------------------------
+  var imagemin = require('gulp-imagemin');
+  var pngquant = require('imagemin-pngquant');
+
+  gulp.task('images', function() {
+    return gulp.src([
+      assetsPath.imgSrc + '/*.+(png|jpg|svg|gif)'
+    ])
+    .pipe(imagemin({
+        progressive: true,
+        use: [pngquant()]
+    }))
+    .pipe(gulp.dest(assetsPath.imgDist))
+    .pipe(size({ title: 'images' }));
+  });
+
+
+// SPRITE SVG
+// ----------------------------------------------------------------------------
+  var svgSprite = require('gulp-svg-sprite');
+  var svgmin = require('gulp-svgmin');
+  var svg2png = require('gulp-svg2png');
+
+  gulp.task('svgSprite', function () {
+    return gulp.src( assetsPath.spriteSrc + '/*.svg' )
+      .pipe(svgmin({
+        plugins: [
+          {convertColors: false},
+          {removeAttrs: {attrs: ['fill']}}
+        ]
+      }))
+      .pipe(svgSprite({
+        dest: assetsPath.spriteDist,
+        mode: {
+          symbol: {
+            dest: './',
+            sprite: 'icons',
+            transform : [{svgo : {}}]
+          }
+        }
+      }))
+      .pipe(gulp.dest(assetsPath.spriteDist));
+  });
+
+  gulp.task('svg2png', function () {
+    return gulp.src(assetsPath.spriteSrc + '/*.svg' )
+      .pipe(svg2png())
+      .pipe(gulp.dest(assetsPath.spritePngDist));
+  });
+
+  gulp.task('sprite', function(callback) {
+    runSequence(
+      'svgSprite',
+      'svg2png',
+      callback);
+  });
+
+
 // WATCH FOR CHANGES
 // ----------------------------------------------------------------------------
   var browserSync = require('browser-sync').create();
@@ -191,6 +258,10 @@ var sourcemaps = require('gulp-sourcemaps');
     gulp.watch( assetsPath.stylesSrc + '/**/*.scss', ['css']);
     gulp.watch( assetsPath.scriptsSrc + '/**/*.js', ['js']);
     gulp.watch( assetsPath.scriptsDist + '/**/*.js').on('change', browserSync.reload);
+    gulp.watch( assetsPath.imgSrc + '/*.+(png|jpg|svg|gif)', ['images']);
+    gulp.watch( assetsPath.imgDist + '/*.+(png|jpg|svg|gif)').on('change', browserSync.reload);
+    gulp.watch( assetsPath.spriteSrc + '/*.svg', ['sprite']);
+    gulp.watch( assetsPath.spriteDist + '/*.svg').on('change', browserSync.reload);
   });
 
 
@@ -202,7 +273,9 @@ var sourcemaps = require('gulp-sourcemaps');
       [
         'html',
         'scss-lint',
-        'modernizr'
+        'modernizr',
+        'images',
+        'sprite'
       ],
       callback);
   });
@@ -210,3 +283,13 @@ var sourcemaps = require('gulp-sourcemaps');
   gulp.task('default', [
     'serve'
   ]);
+
+
+// DEPLOY
+// ----------------------------------------------------------------------------
+  var ghPages = require('gulp-gh-pages');
+
+  gulp.task('deploy', ['build'], function() {
+    return gulp.src( basePath.dist + '/**/*')
+      .pipe(ghPages());
+  });
