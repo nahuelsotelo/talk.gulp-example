@@ -4,15 +4,38 @@
   <meta charset="UTF-8">
   <title>Gulp Example</title>
 
-  <link rel="stylesheet" href="css/main.min.css">
   <script src="js/vendor/modernizr.js"></script>
+
+  <link rel="stylesheet" href="css/main.min.css">
+
+  <link href="https://fonts.googleapis.com/css?family=Bevan|Roboto+Slab:400,700" rel="stylesheet" type="text/css">
 </head>
 <body>
-  <h1>Zed is dead baby, Zed is dead</h1>
+  <h1 class="t-hero">Zed is dead baby, <span>Zed is dead.</span></h1>
 
-  <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Eligendi pariatur laboriosam dolore atque consequuntur quam delectus, perspiciatis aliquid nostrum veniam, porro deserunt, fuga dolor? Alias provident eos voluptatum, quod quae?</p>
+  <p class="image-wrap"><img src="img/zed.gif" alt=""></p>
 
-  <h2>Heading 2</h2>
-  <h3>Heading 3</h3>
+  <div class="icons">
+    <svg class="mt-Icon">
+      <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="/img/sprite/icons.svg#chopper"/>
+    </svg>
+
+    <svg class="mt-Icon">
+      <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="/img/sprite/icons.svg#girl"/>
+    </svg>
+
+    <svg class="mt-Icon">
+      <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="/img/sprite/icons.svg#skull"/>
+    </svg>
+  </div>
+
+  <footer>
+    <p><small>Iconos: Face by Hoang Loi from the Noun Project | Skull by Giuditta Valentina Gentile from the Noun Project | Motorcycle by Okan Benn from the Noun Project</small> </p>
+  </footer>
+
+  <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+
+  <script src="/js/scripts.min.js"></script>
+  <script src="/js/pollyfills.min.js"></script>
 </body>
 </html>

@@ -89,13 +89,13 @@ var size = require('gulp-size');
         assetsPath.stylesSrc + '/**/*.scss',
         '!' + assetsPath.stylesSrc + '/vendor/**/*.scss'
       ])
-      .pipe(cache('scsslint'))
+      .pipe(cache('scss-lint'))
       .pipe(scsslint({
         'config': './.scss-lint.yml',
       }));
   });
 
-  gulp.task('css', function() {
+  gulp.task('css', ['scss-lint'], function() {
     return gulp.src( assetsPath.stylesSrc + '/**/*.scss' )
       .pipe(plumber( {errorHandler: onError} ))
       .pipe(sourcemaps.init())
@@ -131,7 +131,7 @@ var size = require('gulp-size');
   gulp.task('js-lint', function() {
     return gulp.src([
       assetsPath.scriptsSrc + '/**/*.js',
-      '!' + assetsPath.scriptsSrc + '/vendor/**/*.js',
+      '!' + assetsPath.scriptsSrc + '/pollyfills/*.js',
     ])
     .pipe(eslint())
     .pipe(eslint.format());
@@ -139,7 +139,7 @@ var size = require('gulp-size');
 
   gulp.task('js', ['js-lint'], function() {
     return gulp.src([
-      assetsPath.scriptsSrc + 'vendor/jquery.js',
+      '!' + assetsPath.scriptsSrc + '/pollyfills/*.js',
       assetsPath.scriptsSrc + '/components/*.js'
     ])
     .pipe(plumber({
@@ -164,6 +164,27 @@ var size = require('gulp-size');
     .pipe(gulp.dest(assetsPath.scriptsDist));
   });
 
+  gulp.task('pollyfills', function() {
+    return gulp.src([
+      assetsPath.scriptsSrc + '/pollyfills/loadJS.js',
+      assetsPath.scriptsSrc + '/pollyfills/pollyfills-list.js',
+    ])
+    .pipe(plumber({
+      errorHandler: onError
+    }))
+    .pipe(concat('pollyfills.min.js'))
+    .pipe(gulp.dest( assetsPath.scriptsDist ));
+  });
+
+  gulp.task('copy-pollyfills', ['pollyfills'], function() {
+    return gulp.src([
+      assetsPath.scriptsSrc + '/pollyfills/*.js',
+      '!' + assetsPath.scriptsSrc + '/pollyfills/loadJS.js',
+      '!' + assetsPath.scriptsSrc + '/pollyfills/pollyfills-list.js',
+    ])
+    .pipe(gulp.dest( assetsPath.scriptsDist + '/pollyfills' ));
+  });
+
 
 // MODERNIZR
 // ----------------------------------------------------------------------------
@@ -173,6 +194,7 @@ var size = require('gulp-size');
     gulp.src([
       assetsPath.stylesDist + '/*.css',
       assetsPath.scriptsDist + '/scrpts.min.js',
+      assetsPath.scriptsSrc + '/pollyfills/pollyfills-list.js',
     ])
     .pipe(modernizr({
       'options': [
@@ -257,6 +279,8 @@ var size = require('gulp-size');
     gulp.watch( basePath.dist + '/**/*.html').on('change', browserSync.reload);
     gulp.watch( assetsPath.stylesSrc + '/**/*.scss', ['css']);
     gulp.watch( assetsPath.scriptsSrc + '/**/*.js', ['js']);
+    gulp.watch( assetsPath.scriptsSrc + '/pollyfills/*.js', ['copy-pollyfills'] );
+
     gulp.watch( assetsPath.scriptsDist + '/**/*.js').on('change', browserSync.reload);
     gulp.watch( assetsPath.imgSrc + '/*.+(png|jpg|svg|gif)', ['images']);
     gulp.watch( assetsPath.imgDist + '/*.+(png|jpg|svg|gif)').on('change', browserSync.reload);
@@ -273,6 +297,7 @@ var size = require('gulp-size');
       [
         'html',
         'scss-lint',
+        'copy-pollyfills',
         'modernizr',
         'images',
         'sprite'
